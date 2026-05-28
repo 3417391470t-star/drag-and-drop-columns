@@ -1,8 +1,616 @@
-/*
+/* Drag and Drop Columns - explicit rows, max 3 blocks per row */
+.ddc-root {
+  --ddc-gap: 14px;
+  --ddc-align: stretch;
+  width: 100%;
+  box-sizing: border-box;
+}
 
-This CSS file will be included with your plugin, and
-available in the app when your plugin is enabled.
+.ddc-board {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ddc-gap);
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 14px;
+  background: var(--background-secondary);
+  overflow-x: auto;
+}
 
-If your plugin does not need CSS, delete this file.
+.ddc-row-wrap {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 34px;
+  gap: 8px;
+  align-items: stretch;
+  width: 100%;
+  box-sizing: border-box;
+}
 
-*/
+.ddc-row {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: var(--ddc-align);
+  gap: var(--ddc-gap);
+  min-height: 130px;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 8px;
+  border: 1px dashed color-mix(in srgb, var(--background-modifier-border) 85%, transparent);
+  border-radius: 12px;
+  overflow-x: auto;
+  overflow-y: visible;
+  background: color-mix(in srgb, var(--background-primary) 45%, transparent);
+  transition: border-color 140ms ease, background 140ms ease;
+}
+
+.ddc-row.is-row-over {
+  border-color: var(--interactive-accent);
+  background: color-mix(in srgb, var(--interactive-accent) 10%, transparent);
+}
+
+.ddc-row.is-row-full {
+  border-color: #dc2626;
+  background: color-mix(in srgb, #dc2626 8%, transparent);
+}
+
+.ddc-card {
+  --ddc-card-bg: var(--background-primary);
+  --ddc-card-text: var(--text-normal);
+  --ddc-title-color: var(--text-normal);
+  --ddc-title-bg: var(--background-secondary-alt);
+  --ddc-accent: var(--interactive-accent);
+  --ddc-title-size: 1.05em;
+  --ddc-body-size: 1em;
+  --ddc-radius: 12px;
+  position: relative;
+  flex: 1 1 0;
+  min-width: min(100%, 140px);
+  max-width: none;
+  min-height: 120px;
+  box-sizing: border-box;
+  overflow: visible;
+  border: 1px solid var(--background-modifier-border);
+  border-left: 5px solid var(--ddc-accent);
+  border-radius: var(--ddc-radius);
+  background: var(--ddc-card-bg);
+  color: var(--ddc-card-text);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, .07);
+  transition: transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease, opacity 140ms ease;
+}
+
+.ddc-card:hover {
+  border-color: var(--ddc-accent);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, .12);
+  transform: translateY(-1px);
+}
+
+.ddc-card.is-dragging {
+  opacity: .45;
+  transform: scale(.985);
+}
+
+.ddc-handle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  color: color-mix(in srgb, var(--ddc-card-text) 64%, transparent);
+  font-size: 12px;
+  line-height: 1;
+  cursor: grab;
+  user-select: none;
+  background: color-mix(in srgb, var(--ddc-title-bg) 78%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--ddc-accent) 22%, transparent);
+}
+
+.ddc-card:active .ddc-handle { cursor: grabbing; }
+.ddc-grip { opacity: .82; }
+.ddc-label { font-weight: 600; }
+
+.ddc-titlebar {
+  min-height: 48px;
+  padding: 12px 42px 10px 14px;
+  overflow: hidden;
+  background: var(--ddc-title-bg);
+  border-bottom: 1px solid color-mix(in srgb, var(--ddc-accent) 20%, transparent);
+}
+
+.ddc-titleline {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.ddc-placeholder,
+.ddc-muted {
+  opacity: .62;
+  font-style: italic;
+}
+
+.ddc-edit {
+  box-sizing: border-box;
+  border: 1px solid transparent;
+  outline: none;
+  background: transparent;
+  color: inherit;
+  font-family: inherit;
+  min-width: 0;
+}
+
+.ddc-edit:hover {
+  border-color: color-mix(in srgb, var(--ddc-accent) 28%, transparent);
+}
+
+.ddc-edit:focus {
+  border-color: var(--ddc-accent);
+  background: color-mix(in srgb, var(--background-primary) 72%, transparent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--ddc-accent) 16%, transparent);
+}
+
+.ddc-icon-input {
+  width: 2.4em;
+  flex: 0 0 2.4em;
+  padding: 3px 4px;
+  border-radius: 7px;
+  text-align: center;
+  font-size: 1.15em;
+  line-height: 1.2;
+}
+
+.ddc-title-input {
+  flex: 1 1 auto;
+  width: 100%;
+  padding: 4px 6px;
+  border-radius: 8px;
+  color: var(--ddc-title-color);
+  font-size: var(--ddc-title-size);
+  font-weight: 750;
+  line-height: 1.35;
+}
+
+.ddc-subtitle-input {
+  display: block;
+  width: 100%;
+  margin-top: 5px;
+  padding: 3px 6px;
+  border-radius: 7px;
+  color: color-mix(in srgb, var(--ddc-title-color) 72%, var(--text-muted));
+  font-size: .88em;
+  line-height: 1.45;
+}
+
+.ddc-edit::placeholder {
+  color: currentColor;
+  opacity: .5;
+  font-style: italic;
+}
+
+.ddc-body-wrap {
+  position: relative;
+  overflow: hidden;
+  min-height: 96px;
+}
+
+.ddc-content-preview {
+  min-height: 96px;
+  padding: 12px 14px 14px;
+  color: var(--ddc-card-text);
+  font-size: var(--ddc-body-size);
+  line-height: 1.68;
+  overflow-x: auto;
+  overflow-y: visible;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  cursor: text;
+  -webkit-overflow-scrolling: touch;
+}
+
+.ddc-content-preview:hover {
+  background: color-mix(in srgb, var(--ddc-accent) 8%, transparent);
+}
+
+.ddc-content-preview > :first-child { margin-top: 0; }
+.ddc-content-preview > :last-child { margin-bottom: 0; }
+
+.ddc-content-preview,
+.ddc-content-preview * {
+  color: var(--ddc-card-text) !important;
+}
+
+.ddc-content-preview strong,
+.ddc-content-preview b {
+  color: color-mix(in srgb, var(--ddc-card-text) 92%, #000 8%) !important;
+  font-weight: 850;
+}
+
+.ddc-content-preview mark,
+.ddc-content-preview .search-highlight,
+.ddc-content-preview span[style*="background-color"] {
+  color: #111827 !important;
+  background-color: #fde047 !important;
+  border-radius: 3px;
+  padding: 0 .12em;
+}
+
+.ddc-content-preview img,
+.ddc-content-preview video,
+.ddc-content-preview iframe,
+.ddc-content-preview table,
+.ddc-content-preview pre {
+  max-width: 100%;
+}
+
+.ddc-content-preview table {
+  display: block;
+  overflow-x: auto;
+}
+
+.ddc-content-preview pre,
+.ddc-content-preview code {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.ddc-content-preview .math,
+.ddc-content-preview mjx-container,
+.ddc-content-preview mjx-container *,
+.ddc-content-preview .katex,
+.ddc-content-preview .katex *,
+.ddc-content-preview .MathJax,
+.ddc-content-preview .MathJax * {
+  color: var(--ddc-card-text) !important;
+  fill: var(--ddc-card-text) !important;
+  stroke: var(--ddc-card-text) !important;
+}
+
+.ddc-content-preview .math,
+.ddc-content-preview mjx-container,
+.ddc-content-preview .katex,
+.ddc-content-preview .MathJax {
+  max-width: 100% !important;
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+  white-space: nowrap !important;
+  box-sizing: border-box;
+  -webkit-overflow-scrolling: touch;
+}
+
+.ddc-content-preview mjx-container[jax="CHTML"] {
+  display: inline-block !important;
+  vertical-align: middle;
+}
+
+.ddc-content-preview mjx-container[jax="CHTML"][display="true"],
+.ddc-content-preview .math.math-block,
+.ddc-content-preview .katex-display {
+  display: block !important;
+  max-width: 100% !important;
+  margin: .65em 0;
+  padding: 8px;
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+  white-space: nowrap !important;
+  border: 1px solid color-mix(in srgb, var(--ddc-accent) 26%, transparent);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, .48);
+}
+
+.ddc-content-preview mjx-container svg,
+.ddc-content-preview .MathJax svg {
+  max-width: none !important;
+}
+
+.ddc-content-preview::-webkit-scrollbar,
+.ddc-content-preview mjx-container::-webkit-scrollbar,
+.ddc-content-preview .katex-display::-webkit-scrollbar {
+  height: 6px;
+}
+
+.ddc-content-preview::-webkit-scrollbar-thumb,
+.ddc-content-preview mjx-container::-webkit-scrollbar-thumb,
+.ddc-content-preview .katex-display::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--ddc-accent) 45%, transparent);
+  border-radius: 999px;
+}
+
+.ddc-content-input {
+  display: block;
+  width: 100%;
+  min-height: 96px;
+  padding: 12px 14px 14px;
+  resize: vertical;
+  border: 0;
+  border-radius: 0;
+  color: var(--ddc-card-text);
+  background: color-mix(in srgb, var(--background-primary) 78%, transparent);
+  font-size: var(--ddc-body-size);
+  line-height: 1.68;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  white-space: pre-wrap;
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+.ddc-content-input:focus {
+  border: 0;
+  box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--ddc-accent) 22%, transparent);
+}
+
+.ddc-add {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px dashed var(--background-modifier-border);
+  border-radius: 12px;
+  background: var(--background-secondary);
+  color: var(--interactive-accent);
+  font-size: 24px;
+  font-weight: 700;
+  cursor: pointer;
+  min-height: 34px;
+}
+
+.ddc-add:hover {
+  border-color: var(--interactive-accent);
+  background: var(--background-modifier-hover);
+}
+
+.ddc-add-row-block {
+  min-width: 34px;
+  height: 100%;
+}
+
+.ddc-add-row-block.is-disabled,
+.ddc-add-row-block:disabled {
+  opacity: .25;
+  cursor: not-allowed;
+  border-color: var(--background-modifier-border);
+  color: var(--text-muted);
+}
+
+.ddc-new-row-zone {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 32px;
+  border: 1px dashed transparent;
+  border-radius: 10px;
+  color: var(--text-muted);
+  font-size: 12px;
+  opacity: .52;
+  cursor: pointer;
+  transition: opacity 140ms ease, border-color 140ms ease, background 140ms ease, color 140ms ease;
+}
+
+.ddc-new-row-zone:hover,
+.ddc-new-row-zone.is-over {
+  opacity: 1;
+  border-color: var(--interactive-accent);
+  background: color-mix(in srgb, var(--interactive-accent) 10%, transparent);
+  color: var(--text-normal);
+}
+
+.ddc-new-row-plus {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--interactive-accent) 14%, transparent);
+  color: var(--interactive-accent);
+  font-weight: 900;
+}
+
+.ddc-card.drop-before::before,
+.ddc-card.drop-after::after {
+  content: '';
+  position: absolute;
+  z-index: 5;
+  top: 8px;
+  bottom: 8px;
+  width: 4px;
+  border-radius: 999px;
+  background: var(--ddc-accent);
+  pointer-events: none;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--ddc-accent) 20%, transparent);
+}
+
+.ddc-card.drop-before::before { left: -2px; }
+.ddc-card.drop-after::after { right: -2px; }
+
+.ddc-empty {
+  padding: 12px 14px;
+  border: 1px dashed var(--background-modifier-border);
+  border-radius: 8px;
+  color: var(--text-muted);
+  background: var(--background-secondary);
+}
+
+.ddc-delete {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 8;
+  min-width: 26px;
+  height: 26px;
+  padding: 0 8px;
+  border: 1px solid color-mix(in srgb, #dc2626 45%, transparent);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, .72);
+  color: #991b1b;
+  font-size: 16px;
+  font-weight: 800;
+  line-height: 1;
+  cursor: pointer;
+  opacity: .35;
+  transition: opacity 140ms ease, background 140ms ease, color 140ms ease, transform 140ms ease;
+}
+
+.ddc-card:hover .ddc-delete,
+.ddc-delete:focus,
+.ddc-delete.is-confirming {
+  opacity: 1;
+}
+
+.ddc-delete:hover {
+  background: #fee2e2;
+  color: #7f1d1d;
+  transform: scale(1.04);
+}
+
+.ddc-delete.is-confirming {
+  width: auto;
+  min-width: 76px;
+  background: #dc2626;
+  color: #fff;
+  border-color: #991b1b;
+  font-size: 12px;
+}
+
+.ddc-resize {
+  position: absolute;
+  right: 4px;
+  bottom: 4px;
+  z-index: 9;
+  width: 16px;
+  height: 16px;
+  cursor: nwse-resize;
+  opacity: .38;
+  border-right: 3px solid var(--ddc-accent);
+  border-bottom: 3px solid var(--ddc-accent);
+  border-radius: 2px;
+  background: linear-gradient(135deg, transparent 0 45%, color-mix(in srgb, var(--ddc-accent) 28%, transparent) 45% 55%, transparent 55% 100%);
+}
+
+.ddc-card:hover .ddc-resize,
+.ddc-resize:hover {
+  opacity: 1;
+}
+
+body.ddc-moving-active,
+body.ddc-moving-active * {
+  cursor: grabbing !important;
+  user-select: none !important;
+}
+
+body.ddc-resizing-active,
+body.ddc-resizing-active * {
+  cursor: nwse-resize !important;
+  user-select: none !important;
+}
+
+@media (max-width: 560px) {
+  .ddc-board { padding: 8px; }
+  .ddc-row-wrap { grid-template-columns: 1fr; }
+  .ddc-add-row-block { height: 34px; }
+  .ddc-card {
+    flex-basis: 100% !important;
+    min-width: 100%;
+  }
+}
+
+
+/* v2.2.0 height fix: each card keeps its own height instead of stretching to row height */
+.ddc-root {
+  --ddc-align: flex-start;
+}
+
+.ddc-row {
+  align-items: var(--ddc-align, flex-start);
+}
+
+.ddc-card {
+  align-self: flex-start;
+  display: flex;
+  flex-direction: column;
+  height: 190px;
+  min-height: 120px;
+  overflow: hidden;
+}
+
+.ddc-handle,
+.ddc-titlebar {
+  flex: 0 0 auto;
+}
+
+.ddc-body-wrap {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.ddc-content-preview,
+.ddc-content-input {
+  box-sizing: border-box;
+  flex: 1 1 auto;
+  min-height: 0;
+  height: 100%;
+  overflow: auto;
+}
+
+.ddc-content-input {
+  resize: none;
+}
+
+
+/* Keep all blocks in the same explicit row visually side-by-side. */
+.ddc-row {
+  flex-wrap: nowrap !important;
+  justify-content: flex-start;
+}
+
+.ddc-row > .ddc-card {
+  flex-shrink: 1;
+  min-width: 140px;
+}
+
+
+/* v2.3-style row canvas: each row is an independent free-layout area, max 3 blocks. */
+.ddc-row-wrap {
+  align-items: stretch;
+}
+
+.ddc-row {
+  position: relative !important;
+  display: block !important;
+  flex-wrap: nowrap !important;
+  min-height: 220px;
+  height: 220px;
+  overflow-x: hidden;
+  overflow-y: visible;
+  background-image:
+    linear-gradient(color-mix(in srgb, var(--background-modifier-border) 22%, transparent) 1px, transparent 1px),
+    linear-gradient(90deg, color-mix(in srgb, var(--background-modifier-border) 22%, transparent) 1px, transparent 1px);
+  background-size: 24px 24px;
+  background-position: 8px 8px;
+}
+
+.ddc-row > .ddc-card {
+  position: absolute !important;
+  flex: none !important;
+  flex-shrink: 0 !important;
+  min-width: 140px;
+  max-width: none;
+}
+
+.ddc-row.is-row-over {
+  box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--interactive-accent) 55%, transparent);
+}
+
+.ddc-card.is-dragging {
+  z-index: 20;
+}
+
+@media (max-width: 560px) {
+  .ddc-row > .ddc-card {
+    min-width: 140px;
+  }
+}
