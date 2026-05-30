@@ -27,7 +27,7 @@
 
 ### 手动安装
 
-从 最新 Release 下载 main.js、manifest.json 和 styles.css，复制到：
+直接从页面 下载 main.js、manifest.json 和 styles.css，复制到：
 
 ```
 <你的仓库>/.obsidian/plugins/drag-and-drop-columns/
